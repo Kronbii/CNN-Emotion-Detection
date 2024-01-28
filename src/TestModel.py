@@ -78,7 +78,7 @@ while True:
                 cv2.LINE_AA,
             )
         except:
-            print("naha")
+            print("invalid index")
 
     cv2.imshow("Emotion Detection", frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
