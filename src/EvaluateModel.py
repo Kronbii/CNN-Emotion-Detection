@@ -10,14 +10,15 @@ from sklearn.metrics import (
 
 
 emotion_dict = {
-    0: "Angry",
-    1: "Disgusted",
-    2: "Fearful",
-    3: "Happy",
-    4: "Neutral",
-    5: "Sad",
-    6: "Surprised",
+    0: "Red",
+    1: "Yellow",
+    2: "Red",
+    3: "Green",
+    4: "Blue",
+    5: "Blue",
+    6: "Yellow",
 }
+
 
 # load json and create model
 json_file = open("model/emotion_model.json", "r")
