@@ -86,6 +86,7 @@ emotion_model.compile(
 )
 """
 # Train the neural network/model
+
 emotion_model_info = emotion_model.fit_generator(
     train_generator,
     steps_per_epoch=train_data_qtt // 128,

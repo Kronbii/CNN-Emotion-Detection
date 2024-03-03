@@ -24,6 +24,7 @@ print("==================================================")
 print(loaded_model_json)
 print("==================================================")
 
+
 # load weights into new model
 emotion_model.load_weights("model/emotion_model.h5")
 print("Loaded model from disk")
@@ -33,7 +34,7 @@ print("Loaded model from disk")
 
 # pass here your video path
 # you may download one from here : https://www.pexels.com/video/three-girls-laughing-5273028/
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 while True:
     # Find haar cascade to draw bounding box around face
