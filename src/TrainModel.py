@@ -10,6 +10,9 @@ from keras.preprocessing.image import ImageDataGenerator
 train_data_gen = ImageDataGenerator(rescale=1.0 / 255)
 validation_data_gen = ImageDataGenerator(rescale=1.0 / 255)
 
+train_data_dir = "data/train"
+test_data_dir = "data/test"
+
 # variables needed for parameters
 train_data_qtt = 1628
 test_data_qtt = 405
@@ -19,7 +22,7 @@ picture_mode = 1  # 1 for grayscale 3 for RGB
 
 # Preprocess all test images
 train_generator = train_data_gen.flow_from_directory(
-    "data/train",
+    train_data_dir,
     target_size=(picture_pixel_size_x, picture_pixel_size_y),
     batch_size=64,
     color_mode="grayscale",
@@ -28,7 +31,7 @@ train_generator = train_data_gen.flow_from_directory(
 
 # Preprocess all train images
 validation_generator = validation_data_gen.flow_from_directory(
-    "data/test",
+    test_data_dir,
     target_size=(picture_pixel_size_x, picture_pixel_size_y),
     batch_size=64,
     color_mode="grayscale",
@@ -54,16 +57,16 @@ emotion_model.add(Dropout(0.25))
 
 emotion_model.add(Conv2D(128, kernel_size=(3, 3), activation="relu"))
 emotion_model.add(MaxPooling2D(pool_size=(2, 2)))
-emotion_model.add(Conv2D(128, kernel_size=(3, 3), activation="relu"))
-emotion_model.add(MaxPooling2D(pool_size=(2, 2)))
+
 emotion_model.add(Conv2D(128, kernel_size=(3, 3), activation="relu"))
 emotion_model.add(MaxPooling2D(pool_size=(2, 2)))
 emotion_model.add(Dropout(0.25))
-
 emotion_model.add(Flatten())
+
 emotion_model.add(Dense(1024, activation="relu"))
 emotion_model.add(Dropout(0.5))
 emotion_model.add(Dense(4, activation="softmax"))
+
 
 cv2.ocl.setUseOpenCL(False)
 
@@ -73,27 +76,14 @@ emotion_model.compile(
     metrics=["accuracy"],
 )
 
-"""
-learning_rate = 0.001
-momentum = 0.9
-nesterov = True
-
-optimizer = tf.keras.optimizers.SGD(
-    learning_rate=learning_rate, momentum=momentum, nesterov=nesterov
-)
-
-emotion_model.compile(
-    optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
-)
-"""
 # Train the neural network/model
 
 emotion_model_info = emotion_model.fit_generator(
     train_generator,
-    steps_per_epoch=train_data_qtt // 128,
-    epochs=5000,
+    steps_per_epoch=train_data_qtt // 64,
+    epochs=1000,
     validation_data=validation_generator,
-    validation_steps=test_data_qtt // 128,
+    validation_steps=test_data_qtt // 64,
 )
 
 # save model structure in jason file
