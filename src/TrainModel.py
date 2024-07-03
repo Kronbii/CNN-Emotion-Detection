@@ -11,15 +11,15 @@ train_data_gen = ImageDataGenerator(rescale=1.0 / 255)
 validation_data_gen = ImageDataGenerator(rescale=1.0 / 255)
 
 # variables needed for parameters
-train_data_qtt = 1628  ########################################CHANGE
-test_data_qtt = 405  ########################################CHANGE
+train_data_qtt = 1628
+test_data_qtt = 405
 picture_pixel_size_x = 48  # in pixels
 picture_pixel_size_y = 48  # in pixels
 picture_mode = 1  # 1 for grayscale 3 for RGB
 
 # Preprocess all test images
 train_generator = train_data_gen.flow_from_directory(
-    "data/train",  ########################################CHANGE
+    "data/train",
     target_size=(picture_pixel_size_x, picture_pixel_size_y),
     batch_size=64,
     color_mode="grayscale",
@@ -28,7 +28,7 @@ train_generator = train_data_gen.flow_from_directory(
 
 # Preprocess all train images
 validation_generator = validation_data_gen.flow_from_directory(
-    "data/test",  ########################################CHANGE
+    "data/test",
     target_size=(picture_pixel_size_x, picture_pixel_size_y),
     batch_size=64,
     color_mode="grayscale",
@@ -47,6 +47,7 @@ emotion_model.add(
     )
 )
 
+# RELU was used to help the model learn complex and non-linear representations of the input data. and converge the model faster.
 emotion_model.add(Conv2D(64, kernel_size=(3, 3), activation="relu"))
 emotion_model.add(MaxPooling2D(pool_size=(2, 2)))
 emotion_model.add(Dropout(0.25))
