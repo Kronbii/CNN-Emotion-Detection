@@ -1,54 +1,44 @@
 # import required packages
 import cv2
-import tensorflow as tf
+import keras
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
 from keras.optimizers import Adam
-from keras.preprocessing.image import ImageDataGenerator
-
-# Initialize image data generator with rescaling
-train_data_gen = ImageDataGenerator(rescale=1.0 / 255)
-validation_data_gen = ImageDataGenerator(rescale=1.0 / 255)
+from keras.optimizers.schedules import InverseTimeDecay
 
 train_data_dir = "data/train"
 test_data_dir = "data/test"
 
 # variables needed for parameters
-train_data_qtt = 1628
-test_data_qtt = 405
 picture_pixel_size_x = 48  # in pixels
 picture_pixel_size_y = 48  # in pixels
 picture_mode = 1  # 1 for grayscale 3 for RGB
+batch_size = 64
 
-# Preprocess all test images
-train_generator = train_data_gen.flow_from_directory(
-    train_data_dir,
-    target_size=(picture_pixel_size_x, picture_pixel_size_y),
-    batch_size=64,
-    color_mode="grayscale",
-    class_mode="categorical",
-)
+
+def load_images(folder):
+    # one sub-folder per class; pixels rescaled from 0-255 to 0-1
+    images = keras.utils.image_dataset_from_directory(
+        folder,
+        image_size=(picture_pixel_size_x, picture_pixel_size_y),
+        batch_size=batch_size,
+        color_mode="grayscale",
+        label_mode="categorical",
+    )
+    return images.map(lambda x, y: (x / 255.0, y))
+
 
 # Preprocess all train images
-validation_generator = validation_data_gen.flow_from_directory(
-    test_data_dir,
-    target_size=(picture_pixel_size_x, picture_pixel_size_y),
-    batch_size=64,
-    color_mode="grayscale",
-    class_mode="categorical",
-)
+train_generator = load_images(train_data_dir)
+
+# Preprocess all test images
+validation_generator = load_images(test_data_dir)
 
 # create 3 layer neural network for the model
 emotion_model = Sequential()
 
-emotion_model.add(
-    Conv2D(
-        32,
-        kernel_size=(3, 3),
-        activation="relu",
-        input_shape=(picture_pixel_size_x, picture_pixel_size_x, picture_mode),
-    )
-)
+emotion_model.add(keras.Input(shape=(picture_pixel_size_x, picture_pixel_size_y, picture_mode)))
+emotion_model.add(Conv2D(32, kernel_size=(3, 3), activation="relu"))
 
 # RELU was used to help the model learn complex and non-linear representations of the input data. and converge the model faster.
 emotion_model.add(Conv2D(64, kernel_size=(3, 3), activation="relu"))
@@ -72,18 +62,17 @@ cv2.ocl.setUseOpenCL(False)
 
 emotion_model.compile(
     loss="categorical_crossentropy",
-    optimizer=Adam(lr=0.00001, decay=1e-6),
+    # learning rate 1e-5, decayed as 1e-5 / (1 + 1e-6 * step), as the old decay=1e-6 did
+    optimizer=Adam(learning_rate=InverseTimeDecay(0.00001, decay_steps=1, decay_rate=1e-6)),
     metrics=["accuracy"],
 )
 
 # Train the neural network/model
 
-emotion_model_info = emotion_model.fit_generator(
+emotion_model_info = emotion_model.fit(
     train_generator,
-    steps_per_epoch=train_data_qtt // 64,
     epochs=1000,
     validation_data=validation_generator,
-    validation_steps=test_data_qtt // 64,
 )
 
 # save model structure in jason file
@@ -91,5 +80,5 @@ model_json = emotion_model.to_json()
 with open("emotion_model.json", "w") as json_file:
     json_file.write(model_json)
 
-# save trained model weight in .h5 file
-emotion_model.save_weights("emotion_model.h5")
+# save trained model weights (Keras 3 needs the .weights.h5 ending)
+emotion_model.save_weights("emotion_model.weights.h5")

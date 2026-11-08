@@ -3,7 +3,7 @@
 The CNN behind a real-time emotion-recognition prototype I built as a support tool for children with autism: training, a live camera test, and evaluation.
 
 ![Python](https://img.shields.io/badge/Python-Keras%20CNN-3776AB)
-![TensorFlow / Keras](https://img.shields.io/badge/TensorFlow%20%2F%20Keras-2.4-FF6F00)
+![TensorFlow / Keras](https://img.shields.io/badge/TensorFlow%20%2F%20Keras-2.21%20%2F%203-FF6F00)
 
 ```mermaid
 flowchart LR
@@ -33,13 +33,13 @@ This repository is the CNN part of that work: the training script, a live test o
 
 ## How it works
 
-1. **Train.** `src/TrainModel.py` reads face images from `data/train` and `data/test` (one folder per class), rescales them to 48×48 grayscale, and trains a small Keras CNN: four convolution layers with max pooling and dropout, then a 1024-unit dense layer and a softmax output. It saves the architecture to `emotion_model.json` and the weights to `emotion_model.h5`.
+1. **Train.** `src/TrainModel.py` reads face images from `data/train` and `data/test` (one folder per class), rescales them to 48×48 grayscale, and trains a small Keras CNN: four convolution layers with max pooling and dropout, then a 1024-unit dense layer and a softmax output. It saves the architecture to `emotion_model.json` and the weights to `emotion_model.weights.h5`.
 2. **Run live.** `TestModel.py` opens a camera, finds faces with OpenCV's Haar cascade, crops and resizes each face to 48×48, runs the CNN on it, and draws the predicted label on the frame. The label map in the script groups the model's seven output classes into four colour labels: red, yellow, green and blue.
 3. **Evaluate.** `src/EvaluateModel.py` runs the model over `data/test` and prints a confusion matrix and a classification report.
 
 ## Quick start
 
-The pinned versions in `requirements.txt` date from TensorFlow 2.4, so use an environment with Python 3.8 or older.
+`requirements.txt` installs TensorFlow 2.21 and Keras 3, which need Python 3.11 to 3.13. The included model was trained on TensorFlow 2.4; its weights load unchanged, and `model/emotion_model.json` is saved in the Keras 3 format.
 
 ```bash
 pip install -r requirements.txt
@@ -54,13 +54,13 @@ python TestModel.py        # camera 0
 python src/TestModel.py    # same test, camera 1
 ```
 
-**Train your own model.** Put your images in `data/train/<class>/` and `data/test/<class>/`, set `train_data_qtt` and `test_data_qtt` in the script to your image counts, then:
+**Train your own model.** Put your images in `data/train/<class>/` and `data/test/<class>/`, then:
 
 ```bash
 python src/TrainModel.py
 ```
 
-Training runs for 1000 epochs and takes hours on a laptop CPU. Copy the `emotion_model.json` and `emotion_model.h5` it writes into `model/`.
+Training runs for 1000 epochs and takes hours on a laptop CPU. Copy the `emotion_model.json` and `emotion_model.weights.h5` it writes into `model/`, and point `load_weights` in the scripts at the new weights file.
 
 **Evaluate** on `data/test`:
 
@@ -87,7 +87,7 @@ python src/EvaluateModel.py
 - The ~92% is development accuracy on the data I combined. It doesn't tell you how it will do with one particular child in one particular room.
 - It reads facial expressions, and an expression is not always what someone feels. It is a support tool, never a diagnosis.
 - The included model has seven output classes, while `src/TrainModel.py` currently builds a four-class output. A model retrained with it needs a label map that matches.
-- The dataset isn't included, and the dependency pins are old.
+- The dataset isn't included.
 
 ## Links
 
