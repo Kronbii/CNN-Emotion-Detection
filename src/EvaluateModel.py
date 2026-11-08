@@ -1,7 +1,7 @@
 import numpy as np
+import keras
 from keras.models import model_from_json
 import matplotlib.pyplot as plt
-from keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import (
     confusion_matrix,
     classification_report,
@@ -30,20 +30,20 @@ emotion_model = model_from_json(loaded_model_json)
 emotion_model.load_weights("model/emotion_model.h5")
 print("Loaded model from disk")
 
-# Initialize image data generator with rescaling
-test_data_gen = ImageDataGenerator(rescale=1.0 / 255)
-
-# Preprocess all test images
-test_generator = test_data_gen.flow_from_directory(
+# Preprocess all test images: one sub-folder per class, pixels rescaled to 0-1,
+# kept in file order so the predictions line up with the labels
+test_data = keras.utils.image_dataset_from_directory(
     "data/test",
-    target_size=(48, 48),
+    image_size=(48, 48),
     batch_size=64,
     color_mode="grayscale",
-    class_mode="categorical",
-)
+    label_mode="int",
+    shuffle=False,
+).map(lambda x, y: (x / 255.0, y))
+true_classes = np.concatenate([np.asarray(y) for _, y in test_data])
 
 # do prediction on test data
-predictions = emotion_model.predict_generator(test_generator)
+predictions = emotion_model.predict(test_data)
 
 # see predictions
 # for result in predictions:
@@ -52,7 +52,7 @@ predictions = emotion_model.predict_generator(test_generator)
 
 print("-----------------------------------------------------------------")
 # confusion matrix
-c_matrix = confusion_matrix(test_generator.classes, predictions.argmax(axis=1))
+c_matrix = confusion_matrix(true_classes, predictions.argmax(axis=1))
 print(c_matrix)
 cm_display = ConfusionMatrixDisplay(
     confusion_matrix=c_matrix, display_labels=emotion_dict
@@ -62,4 +62,4 @@ plt.show()
 
 # Classification report
 print("-----------------------------------------------------------------")
-print(classification_report(test_generator.classes, predictions.argmax(axis=1)))
+print(classification_report(true_classes, predictions.argmax(axis=1)))
